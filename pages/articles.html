@@ -32,30 +32,25 @@
         <div class="content-area">
             <div class="top-action-bar">
                 <div class="left-actions">
-                    <span class="icon" title="Toggle Sidebar" onclick="toggleSidebar()">☰</span>
+                    <svg class="svg-icon" title="Toggle Sidebar" onclick="toggleSidebar()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </div>
                 <div class="right-actions">
                     <div class="dropdown-container">
-                        <svg class="svg-icon" title="Download" onclick="toggleDownloadMenu()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
+                        <svg class="svg-icon" title="Download" onclick="toggleDownloadMenu()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         <div id="downloadMenu" class="dropdown-menu">
                             <div onclick="downloadFile('pdf')">Download as PDF</div>
                             <div onclick="downloadFile('md')">Download as Markdown (.md)</div>
                         </div>
                     </div>
-                    <span class="icon" title="Fullscreen" onclick="toggleFullScreen()">⛶</span>
-                    <span class="icon" title="Toggle Theme" onclick="toggleTheme()">◑</span>
+                    <svg class="svg-icon" title="Fullscreen" onclick="toggleFullScreen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                    <svg class="svg-icon" title="Toggle Theme" onclick="toggleTheme()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </div>
             </div>
 
             <div class="article-layout">
                 <div class="markdown-wrapper">
                     <div class="markdown-body" id="content-body">
-                        <h1>Welcome to the Terminal 🚀</h1>
-                        <p style="color: #8b949e;">Select an article from the left directory to start reading.</p>
+                        <p style="color: #8b949e;">Initializing connection...</p>
                     </div>
 
                     <div class="article-navigation" id="article-nav" style="display: none;">
@@ -130,28 +125,52 @@
                 if (!response.ok) throw new Error('Repo bulunamadı veya boş.');
                 const data = await response.json();
                 menuContainer.innerHTML = ''; 
+
+                const readmeTitle = 'Readme.md';
+                const readmeUrl = 'https://raw.githubusercontent.com/haktanylmz/haktanylmz/main/README.md';
+
+                const profileDiv = document.createElement('div');
+                profileDiv.className = 'folder-title';
+                profileDiv.innerText = '👤 Profile';
+                menuContainer.appendChild(profileDiv);
+
+                const readmeLink = document.createElement('a');
+                readmeLink.className = 'file-link';
+                readmeLink.innerText = readmeTitle;
+                readmeLink.onclick = () => loadMarkdownContent(readmeUrl, readmeTitle, 0, true);
+                menuContainer.appendChild(readmeLink);
+
+                allArticlesData.push({ path: readmeUrl, title: readmeTitle, content: "", isCustomUrl: true });
+
+                fetch(readmeUrl)
+                    .then(res => res.text())
+                    .then(text => {
+                        allArticlesData[0].content = text;
+                    });
+
                 const folders = data.filter(item => item.type === 'dir');
-                if (folders.length === 0) {
-                    menuContainer.innerHTML = '<p style="color: #ff7b72;">No directories found.</p>';
-                    return;
-                }
                 for (const folder of folders) {
                     const folderDiv = document.createElement('div');
                     folderDiv.className = 'folder-title';
                     folderDiv.innerText = '📁 ' + folder.name.replace(/-/g, ' ');
                     menuContainer.appendChild(folderDiv);
+
                     const filesResponse = await fetch(folder.url);
                     const filesData = await filesResponse.json();
                     const mdFiles = filesData.filter(file => file.name.endsWith('.md'));
+
                     for (const file of mdFiles) {
                         const cleanTitle = file.name.replace('.md', '').replace(/-/g, ' ');
                         const currentIndex = allArticlesData.length;
-                        allArticlesData.push({ path: file.path, title: cleanTitle, content: "" });
+                        
+                        allArticlesData.push({ path: file.path, title: cleanTitle, content: "", isCustomUrl: false });
+
                         const fileLink = document.createElement('a');
                         fileLink.className = 'file-link';
                         fileLink.innerText = cleanTitle;
-                        fileLink.onclick = () => loadMarkdownContent(file.path, cleanTitle, currentIndex);
+                        fileLink.onclick = () => loadMarkdownContent(file.path, cleanTitle, currentIndex, false);
                         menuContainer.appendChild(fileLink);
+
                         fetch(`https://raw.githubusercontent.com/${REPO_NAME}/${BRANCH}/${file.path}`)
                             .then(res => res.text())
                             .then(text => {
@@ -159,26 +178,34 @@
                             });
                     }
                 }
+                
+                loadMarkdownContent(readmeUrl, readmeTitle, 0, true);
+
             } catch (error) {
                 menuContainer.innerHTML = `<p style="color: #ff7b72;">Error: ${error.message}</p>`;
             }
         }
 
-        async function loadMarkdownContent(filePath, title, index) {
+        async function loadMarkdownContent(pathOrUrl, title, index, isCustomUrl) {
             currentArticleTitle = title;
             currentArticleIndex = index;
             contentBody.innerHTML = '<p style="color: #8b949e;">Loading data packets...</p>';
             tocList.innerHTML = '<li><span style="color: #8b949e; font-size: 0.85rem;">Analyzing headers...</span></li>';
+            
             try {
-                const rawUrl = `https://raw.githubusercontent.com/${REPO_NAME}/${BRANCH}/${filePath}`;
+                const rawUrl = isCustomUrl ? pathOrUrl : `https://raw.githubusercontent.com/${REPO_NAME}/${BRANCH}/${pathOrUrl}`;
                 const response = await fetch(rawUrl);
                 if (!response.ok) throw new Error('Dosya okunamadı.');
+
                 currentMarkdownRaw = await response.text(); 
                 contentBody.innerHTML = marked.parse(currentMarkdownRaw);
+                
                 Prism.highlightAll();
                 generateTOC();
                 updateNavigation();
+                
                 if(window.innerWidth <= 768) toggleSidebar();
+                
             } catch (error) {
                 contentBody.innerHTML = `<p style="color: #ff7b72;">Error: ${error.message}</p>`;
             }
@@ -190,19 +217,28 @@
             const nextBox = document.getElementById('nav-next');
             const prevTitle = document.getElementById('nav-prev-title');
             const nextTitle = document.getElementById('nav-next-title');
-            if (allArticlesData.length === 0 || currentArticleIndex === -1) return;
+
+            if (allArticlesData.length <= 1 || currentArticleIndex === -1) {
+                navContainer.style.display = 'none';
+                return;
+            }
+            
             navContainer.style.display = 'flex';
+
             if (currentArticleIndex > 0) {
                 prevBox.style.visibility = 'visible';
-                prevTitle.innerHTML = `&#8592; ${allArticlesData[currentArticleIndex - 1].title}`;
-                prevBox.onclick = () => loadMarkdownContent(allArticlesData[currentArticleIndex - 1].path, allArticlesData[currentArticleIndex - 1].title, currentArticleIndex - 1);
+                const prevItem = allArticlesData[currentArticleIndex - 1];
+                prevTitle.innerHTML = `&#8592; ${prevItem.title}`;
+                prevBox.onclick = () => loadMarkdownContent(prevItem.path, prevItem.title, currentArticleIndex - 1, prevItem.isCustomUrl);
             } else {
                 prevBox.style.visibility = 'hidden';
             }
+
             if (currentArticleIndex < allArticlesData.length - 1) {
                 nextBox.style.visibility = 'visible';
-                nextTitle.innerHTML = `${allArticlesData[currentArticleIndex + 1].title} &#8594;`;
-                nextBox.onclick = () => loadMarkdownContent(allArticlesData[currentArticleIndex + 1].path, allArticlesData[currentArticleIndex + 1].title, currentArticleIndex + 1);
+                const nextItem = allArticlesData[currentArticleIndex + 1];
+                nextTitle.innerHTML = `${nextItem.title} &#8594;`;
+                nextBox.onclick = () => loadMarkdownContent(nextItem.path, nextItem.title, currentArticleIndex + 1, nextItem.isCustomUrl);
             } else {
                 nextBox.style.visibility = 'hidden';
             }
@@ -211,6 +247,7 @@
         searchInput.addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const items = document.querySelectorAll('.file-link');
+            
             items.forEach(item => {
                 if (item.innerText.toLowerCase().includes(term)) {
                     item.style.display = 'block';
@@ -218,10 +255,12 @@
                     item.style.display = 'none';
                 }
             });
+
             if(term.length > 2) {
                 const results = allArticlesData.filter(art => 
                     art.content.toLowerCase().includes(term) || art.title.toLowerCase().includes(term)
                 );
+                
                 if(results.length > 0) {
                     let html = `<h1>Search Results for "${term}"</h1>`;
                     results.forEach(res => {
@@ -229,8 +268,9 @@
                         const start = Math.max(0, index - 40);
                         const end = Math.min(res.content.length, index + 60);
                         let snippet = res.content.substring(start, end).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        
                         html += `
-                            <div class="search-result-card" onclick="loadMarkdownContent('${res.path}', '${res.title}', allArticlesData.findIndex(a => a.path === '${res.path}'))">
+                            <div class="search-result-card" onclick="loadMarkdownContent('${res.path}', '${res.title}', allArticlesData.findIndex(a => a.path === '${res.path}'), ${res.isCustomUrl})">
                                 <h3 style="margin-top:0;">📄 ${res.title}</h3>
                                 <p style="font-size:0.9rem; color:#8b949e;">...${snippet}...</p>
                             </div>
@@ -244,39 +284,45 @@
                     document.getElementById('article-nav').style.display = 'none';
                 }
             } else if (term.length === 0) {
-                contentBody.innerHTML = `<h1>Welcome to the Terminal 🚀</h1><p style="color: #8b949e;">Select an article from the left directory to start reading.</p>`;
-                document.getElementById('article-nav').style.display = 'none';
-                tocList.innerHTML = '<li><span style="color: #8b949e; font-size: 0.85rem;">Waiting for connection...</span></li>';
+                const readme = allArticlesData[0];
+                loadMarkdownContent(readme.path, readme.title, 0, readme.isCustomUrl);
             }
         });
 
         function generateTOC() {
             tocList.innerHTML = ''; 
             const headings = contentBody.querySelectorAll('h1, h2, h3');
+
             if (headings.length === 0) {
                 tocList.innerHTML = '<li><span style="color: #8b949e; font-size: 0.85rem;">No sections found.</span></li>';
                 return;
             }
+
             headings.forEach((heading, index) => {
                 if (!heading.id) heading.id = 'section-' + index;
+
                 const li = document.createElement('li');
                 const a = document.createElement('a');
                 a.href = '#' + heading.id;
                 a.innerText = heading.innerText;
+                
                 if (heading.tagName.toLowerCase() === 'h2') {
                     a.className = 'toc-h2';
                 } else if (heading.tagName.toLowerCase() === 'h3') {
                     a.className = 'toc-h3';
                 }
+
                 li.appendChild(a);
                 tocList.appendChild(li);
             });
+
             const tocLinks = tocList.querySelectorAll('a');
             const observerOptions = {
                 root: null,
                 rootMargin: '-80px 0px -70% 0px',
                 threshold: 0
             };
+
             const observer = new IntersectionObserver(entries => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -289,6 +335,7 @@
                     }
                 });
             }, observerOptions);
+
             headings.forEach(heading => observer.observe(heading));
         }
 
