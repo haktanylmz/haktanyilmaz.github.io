@@ -74,7 +74,8 @@ header a:hover { opacity: 0.8; }
 .search-box input { width: 100%; background-color: transparent; border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px 8px 30px; color: #c9d1d9; font-family: 'Fira Code', monospace; font-size: 0.85rem; outline: none; transition: border-color 0.2s, background-color 0.2s; }
 .search-box input:focus { border-color: #58a6ff; background-color: #0d1117; }
 
-.top-action-bar { position: sticky; top: 70px; background-color: rgba(13, 17, 23, 0.95); backdrop-filter: blur(5px); z-index: 800; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; margin-bottom: 20px; border-bottom: 1px solid #30363d; }
+/* DÜZELTİLEN KISIM: Z-Index 850 Yapıldı */
+.top-action-bar { position: sticky; top: 70px; background-color: rgba(13, 17, 23, 0.95); backdrop-filter: blur(5px); z-index: 850; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; margin-bottom: 20px; border-bottom: 1px solid #30363d; }
 .top-action-bar .left-actions, .top-action-bar .right-actions { display: flex; align-items: center; gap: 18px; }
 
 .svg-icon { width: 20px; height: 20px; cursor: pointer; color: #8b949e; transition: color 0.2s, transform 0.2s; display: block; }
@@ -83,7 +84,8 @@ header a:hover { opacity: 0.8; }
 .article-layout { display: flex; gap: 40px; align-items: flex-start; position: relative; }
 .markdown-wrapper { flex: 1; min-width: 0; }
 
-.toc-sidebar { width: 250px; position: sticky; top: 140px; border-left: 1px solid #30363d; padding-left: 20px; height: calc(100vh - 140px); overflow-y: auto; z-index: 800; }
+/* DÜZELTİLEN KISIM: Z-Index 100 Yapıldı */
+.toc-sidebar { width: 250px; position: sticky; top: 140px; border-left: 1px solid #30363d; padding-left: 20px; height: calc(100vh - 140px); overflow-y: auto; z-index: 100; }
 .toc-sidebar h4 { color: #c9d1d9; margin-bottom: 15px; font-size: 1rem; border-bottom: 1px solid #30363d; padding-bottom: 5px; }
 .toc-sidebar ul { list-style: none; }
 .toc-sidebar li { margin-bottom: 8px; }
