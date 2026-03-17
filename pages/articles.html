@@ -106,7 +106,6 @@
         let currentArticleTitle = "Document";
         let currentArticleIndex = -1;
 
-        /* AÇILIR MENÜ VE MOBİL MENÜ TETİKLEYİCİLERİ */
         function toggleSearchMenu() {
             const searchMenu = document.getElementById('searchMenu');
             const downloadMenu = document.getElementById('downloadMenu');
@@ -144,15 +143,12 @@
             }
         }
 
-        /* BOŞLUĞA TIKLAYINCA TÜM MENÜLERİ KAPATMA MANTIĞI */
         document.addEventListener('click', function(event) {
-            // Arama ve İndirme dropdown'larını kapat (hem mobil hem masaüstü)
             if (!event.target.closest('.dropdown-container')) {
                 const dropdowns = document.querySelectorAll('.dropdown-menu');
                 dropdowns.forEach(d => d.classList.remove('show'));
             }
 
-            // Sağ ve sol kayan menüleri kapat (Sadece mobil)
             if (window.innerWidth <= 768) {
                 const sidebar = document.getElementById('sidebar');
                 const toc = document.querySelector('.toc-sidebar');
@@ -261,7 +257,31 @@
                 if (!response.ok) throw new Error('Dosya okunamadı.');
 
                 currentMarkdownRaw = await response.text(); 
-                contentBody.innerHTML = marked.parse(currentMarkdownRaw);
+                
+                /* ================================================== */
+                /* YENİ EKLENEN KISIM: GÖRSEL PATH'LERİNİ DÜZELTME    */
+                /* ================================================== */
+                let processedMarkdown = currentMarkdownRaw;
+                
+                // Eğer özel URL (Profil/Readme) değilse, klasör bazlı resim yollarını düzeltiyoruz
+                if (!isCustomUrl) {
+                    // Bulunduğumuz markdown dosyasının klasörünü tespit edelim
+                    const parts = pathOrUrl.split('/');
+                    parts.pop(); // Sonda bulunan .md dosyasının adını atalım
+                    const basePath = parts.length > 0 ? parts.join('/') + '/' : '';
+                    
+                    // Resimlerin çekileceği asıl GitHub Raw kök dizini
+                    const baseUrl = `https://raw.githubusercontent.com/${REPO_NAME}/${BRANCH}/${basePath}`;
+                    
+                    // 1. Markdown Formatındaki Resimleri Düzeltme: ![alt text](resim.png) -> ![alt text](https://raw.../resim.png)
+                    processedMarkdown = processedMarkdown.replace(/!\[(.*?)\]\((?!http)(.*?)\)/g, `![$1](${baseUrl}$2)`);
+                    
+                    // 2. HTML Formatındaki Resimleri Düzeltme: <img src="resim.png"> -> <img src="https://raw.../resim.png">
+                    processedMarkdown = processedMarkdown.replace(/<img([^>]+)src=["'](?!http)([^"']+)["']/gi, `<img$1src="${baseUrl}$2"`);
+                }
+                /* ================================================== */
+
+                contentBody.innerHTML = marked.parse(processedMarkdown);
                 
                 Prism.highlightAll();
                 generateTOC();
