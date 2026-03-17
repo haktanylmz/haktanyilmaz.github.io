@@ -119,6 +119,31 @@
             }
         }
 
+        /* YENİ: BOŞLUĞA TIKLAYINCA MENÜYÜ KAPATMA MANTIĞI */
+        document.addEventListener('click', function(event) {
+            // Sadece mobil görünümde (768px ve altı) çalışsın
+            if (window.innerWidth > 768) return; 
+
+            const sidebar = document.getElementById('sidebar');
+            const toc = document.querySelector('.toc-sidebar');
+            
+            // Tıklanan yer menülerin kendi içindeyse veya açma/kapama butonlarındaysa işlem yapma
+            if (sidebar.contains(event.target) || 
+                toc.contains(event.target) || 
+                event.target.closest('[onclick="toggleMobileSidebar()"]') || 
+                event.target.closest('[onclick="toggleMobileTOC()"]')) {
+                return;
+            }
+
+            // Boşluğa (içerik alanına) tıklandıysa açık olan menüleri kapat
+            if (sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+            }
+            if (toc.classList.contains('active')) {
+                toc.classList.remove('active');
+            }
+        });
+
         function downloadFile(type) {
             if (!currentMarkdownRaw) {
                 alert("Please select an article first to download.");
