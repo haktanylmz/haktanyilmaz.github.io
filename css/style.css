@@ -156,9 +156,9 @@ body.light-theme .site-footer { border-top-color: #d0d7de; color: #57606a; }
     .top-action-bar-inner { padding: 0 15px; height: 100%; }
     .top-action-bar .left-actions, .top-action-bar .right-actions { pointer-events: auto; gap: 12px; }
 
-    /* Arama barını mobilde yer değiştiriyoruz */
-    .mobile-search-container { display: flex; align-items: center; }
-    .desktop-search { display: none; }
+    /* Arama barını mobilde yer değiştiriyoruz (!important eklendi) */
+    .mobile-search-container { display: flex !important; align-items: center; }
+    .desktop-search { display: none !important; }
 
     .mobile-toc-btn { display: block; } 
 
